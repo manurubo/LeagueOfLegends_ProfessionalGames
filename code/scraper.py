@@ -154,8 +154,9 @@ for torneo, url in torneos.items():
                                     gol_summary=get_stats_summary(driver)
 
                                     # Se accede a la pestaña de stats
-                                    driver.find_element_by_xpath("//a[contains(text(),'All stats')]").click()
                                     time.sleep(3)
+                                    driver.find_element_by_xpath("//a[contains(text(),'All stats')]").click()
+
                                     # A veces falla por internet ya que es una misma url todo, asique se refresca
                                     driver.refresh()
                                     WebDriverWait(driver, 30).until(EC.presence_of_element_located((By.CLASS_NAME , 'completestats')))
@@ -221,8 +222,9 @@ for torneo, url in torneos.items():
                                 gol_summary=get_stats_summary(driver)
 
                                 # Se accede a la pestaña de stats
-                                driver.find_element_by_xpath("//a[contains(text(),'All stats')]").click()
                                 time.sleep(3)
+                                driver.find_element_by_xpath("//a[contains(text(),'All stats')]").click()
+
                                 # A veces falla por internet ya que es una misma url todo, asique se refresca
                                 driver.refresh()
                                 WebDriverWait(driver, 30).until(EC.presence_of_element_located((By.CLASS_NAME , 'completestats')))

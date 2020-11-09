@@ -255,4 +255,4 @@ for torneo, url in torneos.items():
         driver.get(web+subdomain)
 
 # Los datos extraídos se guardan en un csv
-extracted_data.to_csv("Lol_ProfessionalGames.csv",index=False)
+extracted_data.to_csv("Last_Try_Works.csv",index=False)

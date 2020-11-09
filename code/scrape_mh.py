@@ -9,16 +9,20 @@ from functools import reduce
 import pandas as pd
 
 
-
+# la función interactua con la gráfica de oro, en su versión de diferencia de oro
 def get_dif_gold(driver):
     puntos = driver.find_element_by_css_selector("#timeline-graph-259").find_elements_by_css_selector("circle")
     tiempo = driver.find_element_by_css_selector(".map-header-duration").text
     minutos = int(tiempo.split(":")[0])
     diferencia_oro_azul = {}
     diferencia_oro_rojo = {}
+    # se obtiene un punto cada 5 minutos
     for i in range(5,minutos,5):
+        # se identifica el punto a leer
         hover= ActionChains(driver).move_to_element(puntos[i])
+        # se activa el punto para que mestre los datos
         hover.perform()
+        # se obtiene los datos
         diferencia_oro = driver.find_element_by_css_selector("#codex-tooltip-1").text
         equipo_ventaja = diferencia_oro.split(" ahead")[0]
         dif = diferencia_oro.split("by ")[1].split(" at")[0].replace("k",'')
@@ -38,7 +42,7 @@ def get_dif_gold(driver):
     return(diferencia_oro_azul, diferencia_oro_rojo)
 
 
-
+# la función interactua con la gráfica de oro, en su versión de oro por equipo
 def get_gold_team(driver,color):
     tiempo = driver.find_element_by_css_selector(".map-header-duration").text
     minutos = int(tiempo.split(":")[0])
@@ -47,20 +51,25 @@ def get_gold_team(driver,color):
     elif(color=='rojo'):
         puntos = driver.find_element_by_css_selector("#timeline-graph-260").find_elements_by_css_selector(".point.team-2")
     oro_equipo  = {}
+    # se obtiene un punto cada 5 minutos
     for i in range(5,minutos,5):
+        # se identifica el punto a leer
         hover= ActionChains(driver).move_to_element(puntos[i])
+        # se activa el punto para que mestre los datos
         hover.perform()
-
+        # se obtienen los datos
         oro = driver.find_element_by_css_selector("#codex-tooltip-1").text
         oro_equipo[str(i)+' min'] = int(float(oro.split(" at")[0].replace("k",""))*1000)
 
     return(oro_equipo)
 
+# la función interactua con la gráfica de oro, en su versión de oro por jugador, reseteando la imagen de cada jugador
 def reset_players(driver):
     champs = driver.find_element_by_css_selector("#timeline-graph-261").find_elements_by_css_selector(".champion-portrait")
     for champ in champs:
         champ.click()
 
+# la función interactua con la gráfica de oro, en su versión de oro por jugador, para obtener el oro de un jugador
 def get_gold_player(driver,player):
     tiempo = driver.find_element_by_css_selector(".map-header-duration").text
     minutos = int(tiempo.split(":")[0])
@@ -69,10 +78,13 @@ def get_gold_player(driver,player):
     champ.click()
     puntos = driver.find_element_by_css_selector("#timeline-graph-261").find_elements_by_css_selector(".champion-gold-"+str(player))
     oro_player  = {}
+    # se obtiene un punto cada 5 minutos
     for i in range(5,minutos,5):
+        # se identifica el punto a leer
         hover= ActionChains(driver).move_to_element(puntos[i+1])
+        # se activa el punto para que mestre los datos
         hover.perform()
-
+        # se obtienen los datos
         oro = driver.find_element_by_css_selector("#codex-tooltip-1").text
         oro=oro.split(" at")[0].replace("k","")
         if '.' in oro:
@@ -85,7 +97,7 @@ def get_gold_player(driver,player):
 
 
 
-
+# la función se encarga de interactuar con la gráfica interactiva de oro por minuto, llamando a las funciones superiores
 def scrap_gold_graphs(driver):
     try:
         WebDriverWait(driver, 30).until(EC.presence_of_element_located((By.CSS_SELECTOR , "svg.line-graph")))
@@ -131,6 +143,7 @@ def scrap_gold_graphs(driver):
 
     return (results)
 
+# esta funcion devuelve el numero de heraldos de cada equipo y el número de inhibidores
 def get_heralds_and_inhibitors(driver):
     try:
         heraldos = driver.find_elements_by_css_selector("div.rift-herald-kills")
@@ -149,6 +162,7 @@ def get_heralds_and_inhibitors(driver):
         results = pd.DataFrame(atributos, columns=nombres)
     return(results)
 
+# esta función devuelve que jugador ha obtenido la primera sangre de la partida
 def get_fb(driver):
     try:
         fbs = driver.find_element_by_xpath(".//div[contains(text(),'First Blood') and @class='view']").find_element_by_xpath('../..').find_elements_by_css_selector("td")
@@ -168,7 +182,7 @@ def get_fb(driver):
         results = pd.DataFrame(atributos, columns=nombres)
     return(results)
 
-
+# esta función recibe el dato de un nombre que se quiere extraer para cada jugador de la tabla de estadísticas y genera las 10 variables, una para cada jugador
 def get_stat_mh(driver,var,name):
     try:
         WebDriverWait(driver, 3).until(EC.presence_of_element_located((By.CSS_SELECTOR , "#stats-body")))
@@ -242,7 +256,7 @@ def get_stat_mh(driver,var,name):
 
     return(results)
 
-
+# esta función llama a la función anterior para cada variable que se quiere obtener y se juntan todos los dataframes resultantes en uno
 def get_stats_table_mh(driver):
 
     dfs=[get_heralds_and_inhibitors(driver),get_fb(driver),get_stat_mh(driver,'Total Damage Dealt', "Total_Damage_Dealt"), get_stat_mh(driver,'Physical Damage Dealt', "Physical_Damage_Dealt"),get_stat_mh(driver,'Magic Damage Dealt', "Magic_Damage_Dealt"),get_stat_mh(driver,'True Damage Dealt', "True_Damage_Dealt"),

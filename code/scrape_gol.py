@@ -9,14 +9,14 @@ from functools import reduce
 import pandas as pd
 import re
 
+# función para scrapear los datos de sumario de un mapa
 def get_stats_summary(driver):
 
-    # print("inicio")
     historial=driver.find_element_by_xpath("//a[contains(text(), 'Match history')]").get_attribute("href")
     tiempo = driver.find_element_by_xpath("//div[contains(text(), 'Game Time')]").find_element_by_css_selector("h1").text
     parche = driver.find_element_by_xpath("//div[contains(text(), 'Game Time')]").find_element_by_xpath("..").find_elements_by_css_selector("div")[2].text
 
-
+    # coge ambos equipos y apunta el ganador
     equipo_azul = driver.find_element_by_css_selector("div.blue-line-header")
     nombre_azul = equipo_azul.text.split(" - ")[0]
     if 'WIN' in equipo_azul.text.split(" - ")[1]:
@@ -30,8 +30,10 @@ def get_stats_summary(driver):
     else:
         gana_rojo = 0
 
+    # coge el numero de asesinatos de cada equipo y quien se hace la primera primera_sangre
     asesinatos_azul=equipo_azul.find_element_by_xpath("../..").find_element_by_css_selector("img[alt=Kills]")
     num_asesinatos_azul=asesinatos_azul.find_element_by_xpath("..").text
+    # en caso de que haya algun problema identificando la primera sangre, se asigna como None
     primera_sangre = None
     primera_sangre_lista=asesinatos_azul.find_element_by_xpath("../..").find_elements_by_css_selector("img[alt='First Blood']")
     if len(primera_sangre_lista) != 0:
@@ -44,8 +46,10 @@ def get_stats_summary(driver):
     if len(primera_sangre_lista) != 0:
         primera_sangre = nombre_rojo
 
+    # coge el numero de torres de cada equipo y quien se hace la primera primera_torre
     torres_azul=equipo_azul.find_element_by_xpath("../..").find_element_by_css_selector("img[alt=Towers]")
     num_torres_azul=torres_azul.find_element_by_xpath("..").text
+    # en caso de que haya algun problema identificando la primera sangre, se asigna como None
     primera_torre = None
     primera_torre_lista=torres_azul.find_element_by_xpath("../..").find_elements_by_css_selector("img[alt='First Tower']")
     if len(primera_torre_lista) != 0:
@@ -58,6 +62,7 @@ def get_stats_summary(driver):
     if len(primera_torre_lista) != 0:
         primera_torre = nombre_rojo
 
+    # se obtiene el número de dragones de cada equipo y su tipo si está indicado
     dragones_azul=equipo_azul.find_element_by_xpath("../..").find_element_by_css_selector("img[alt=Dragons]")
     num_dragones_azul=dragones_azul.find_element_by_xpath("..").text
     dragones_viento_azul=dragones_azul.find_element_by_xpath("../..").find_elements_by_css_selector("img[alt='Cloud Drake']")
@@ -80,16 +85,19 @@ def get_stats_summary(driver):
     dragones_montaña_rojo=dragones_rojo.find_element_by_xpath("../..").find_elements_by_css_selector("img[alt='Mountain Drake']")
     num_dragones_montaña_rojo = len(dragones_montaña_rojo)
 
+    # se obtiene el número de nashor de cada equipo
     nashors_azul=equipo_azul.find_element_by_xpath("../..").find_element_by_css_selector("img[alt=Nashor]")
     num_nashors_azul=nashors_azul.find_element_by_xpath("..").text
     nashors_rojo=equipo_rojo.find_element_by_xpath("../..").find_element_by_css_selector("img[alt=Nashor]")
     num_nashors_rojo=nashors_rojo.find_element_by_xpath("..").text
 
+    # se obtiene el oro de cada equipo
     oro_azul=equipo_azul.find_element_by_xpath("../..").find_element_by_css_selector("img[alt='Team Gold']")
     num_oro_azul=oro_azul.find_element_by_xpath("..").text
     oro_rojo=equipo_rojo.find_element_by_xpath("../..").find_element_by_css_selector("img[alt='Team Gold']")
     num_oro_rojo=oro_rojo.find_element_by_xpath("..").text
 
+    # se obtienen los baneos de cada equipo, el último puede faltar porque un equipo elija banear solo 4 campeones
     baneos_azul=equipo_azul.find_element_by_xpath("../..").find_element_by_xpath(".//div[contains(text(),'Bans')]").find_element_by_xpath("..").find_elements_by_css_selector("a")
     ban1_azul=baneos_azul[0].get_attribute("title").split(" ")[0]
     ban2_azul=baneos_azul[1].get_attribute("title").split(" ")[0]
@@ -110,6 +118,7 @@ def get_stats_summary(driver):
     except:
         ban5_rojo="no ban"
 
+    # campeones escogidos por cada equipo
     campeones_azul=equipo_azul.find_element_by_xpath("../..").find_element_by_xpath(".//div[contains(text(),'Picks')]").find_element_by_xpath("..").find_elements_by_css_selector("a")
     pick1_azul=campeones_azul[0].get_attribute("title").replace(" stats", "")
     pick2_azul=campeones_azul[1].get_attribute("title").replace(" stats", "")
@@ -124,6 +133,7 @@ def get_stats_summary(driver):
     pick4_rojo=campeones_rojo[3].get_attribute("title").replace(" stats", "")
     pick5_rojo=campeones_rojo[4].get_attribute("title").replace(" stats", "")
 
+    # se guardan los jugadores de cada equipo
     jugadores_azul = driver.find_elements_by_css_selector("table.playersInfosLine")[0]
     jugadores_rojo = driver.find_elements_by_css_selector("table.playersInfosLine")[1]
 
@@ -141,12 +151,14 @@ def get_stats_summary(driver):
     adc_rojo=players_rojo[3].text
     sup_rojo=players_rojo[4].text
 
+    # se obtiene el kda de cada jugador
     kdas_azul = jugadores_azul.find_elements_by_css_selector("td[style='text-align:center']")
     kda_top_azul=kdas_azul[0].text
     kda_jng_azul=kdas_azul[1].text
     kda_mid_azul=kdas_azul[2].text
     kda_adc_azul=kdas_azul[3].text
     kda_sup_azul=kdas_azul[4].text
+    # se generan als variables kills, deaths and assists para cada jugador
     kills_top_azul=kda_top_azul.split("/")[0]
     deaths_top_azul=kda_top_azul.split("/")[1]
     assists_top_azul=kda_top_azul.split("/")[2]
@@ -185,6 +197,7 @@ def get_stats_summary(driver):
     deaths_sup_rojo=kda_sup_rojo.split("/")[1]
     assists_sup_rojo=kda_sup_rojo.split("/")[2]
 
+    # se obtienen los minions para cada jugador
     css_azul = jugadores_azul.find_elements_by_css_selector("td[style='text-align:center;']")
     css_top_azul=css_azul[0].text
     css_jng_azul=css_azul[1].text
@@ -199,6 +212,7 @@ def get_stats_summary(driver):
     css_adc_rojo=css_rojo[3].text
     css_sup_rojo=css_rojo[4].text
 
+    # se obtienen los summoners para cada jugador, pueden faltar y por tanto están con un try/except
     try:
         summoners_azul=jugadores_rojo.find_elements_by_css_selector("img[alt='Summoner spell']")
         summoner_1_top_azul=summoners_azul[0].get_attribute("src").split("/Summoner")[1].split(".")[0]
@@ -235,8 +249,7 @@ def get_stats_summary(driver):
         summoner_1_adc_rojo = summoner_2_adc_rojo = None
         summoner_1_sup_rojo = summoner_2_sup_rojo = None
 
-    # print("he pasado los summoners")
-
+    # se guarda la información de visión accediendo a los scripts que contienen estos datos
     script_vision=driver.find_element_by_xpath("//th[contains(text(),'Vision')]").find_element_by_xpath("../..").find_element_by_css_selector("script")
     labels=re.sub('\s+',' ',script_vision.get_attribute('innerHTML').replace("\n", "").replace("\t","").replace("","")).split("{")[2:4]
     wards_rojo=re.search("\[(\d+).(\d+)", labels[0])
@@ -249,6 +262,7 @@ def get_stats_summary(driver):
     wards_destroyed_azul = wards_azul[0]
     wards_placed_azul = wards_azul[1]
 
+    # se guarda la información de jungla accediendo a los scripts que contienen estos datos
     script_vision=driver.find_element_by_xpath("//th[contains(text(),'Jungle share')]").find_element_by_xpath("../..").find_element_by_css_selector("script")
     labels=re.sub('\s+',' ',script_vision.get_attribute('innerHTML').replace("\n", "").replace("\t","").replace("","")).split("{")[2:4]
     jng_share_azul=re.search("\[(\d+)(.(\d+))?,(\d+)(.(\d+))?", labels[0])
@@ -261,6 +275,7 @@ def get_stats_summary(driver):
     jng_share_15_rojo = jng_share_rojo[0]
     jng_share_rojo = jng_share_rojo[1]
 
+    # se genera un dataframe para los resultados
     nombres = ["tiempo", "parche", "nombre_azul", "nombre_rojo", "gana_azul", "gana_rojo", "num_asesinatos_azul", "num_asesinatos_rojo", "primera_sangre", "num_torres_azul", "num_torres_rojo", "primera_torre", "num_dragones_azul"," num_dragones_viento_azul","num_dragones_infierno_azul", "num_dragones_oceano_azul", "num_dragones_montaña_azul", "num_dragones_rojo", "num_dragones_viento_rojo","num_dragones_infierno_rojo", "num_dragones_oceano_rojo", "num_dragones_montaña_rojo","num_nashors_azul", "num_nashors_rojo", "num_oro_azul", "num_oro_rojo","ban1_azul","ban2_azul","ban3_azul","ban4_azul","ban5_azul","ban1_rojo","ban2_rojo","ban3_rojo","ban4_rojo","ban5_rojo","pick1_azul","pick2_azul","pick3_azul","pick4_azul","pick5_azul","pick1_rojo","pick2_rojo","pick3_rojo","pick4_rojo","pick5_rojo", "top_azul", "jng_azul", "mid_azul", "adc_azul", "sup_azul", "top_rojo", "jng_rojo", "mid_rojo", "adc_rojo", "sup_rojo", "kills_top_azul", "deaths_top_azul", "assists_top_azul", "kills_jng_azul", "deaths_jng_azul"," assists_jng_azul", "kills_mid_azul", "deaths_mid_azul", "assists_mid_azul", "kills_adc_azul", "deaths_adc_azul", "assists_adc_azul", "kills_sup_azul", "deaths_sup_azul", "assists_sup_azul" ,"kills_top_rojo", "deaths_top_rojo", "assists_top_rojo", "kills_jng_rojo", "deaths_jng_rojo", "assists_jng_rojo", "kills_mid_rojo", "deaths_mid_rojo", "assists_mid_rojo", "kills_adc_rojo", "deaths_adc_rojo", "assists_adc_rojo", "kills_sup_rojo", "deaths_sup_rojo", "assists_sup_rojo", "summoner_1_top_azul", "summoner_2_top_azul", "summoner_1_jng_azul", "summoner_2_jng_azul", "summoner_1_mid_azul", "summoner_2_mid_azul", "summoner_1_adc_azul", "summoner_2_adc_azul", "summoner_1_sup_azul", "summoner_2_sup_azul", "summoner_1_top_rojo", "summoner_2_top_rojo", "summoner_1_jng_rojo", "summoner_2_jng_rojo", "summoner_1_mid_rojo", "summoner_2_mid_rojo", "summoner_1_adc_rojo", "summoner_2_adc_rojo", "summoner_1_sup_rojo", "summoner_2_sup_rojo", "css_top_azul", "css_jng_azul", "css_mid_azul", "css_adc_azul", "css_sup_azul", "css_top_rojo","css_jng_rojo", "css_mid_rojo", "css_adc_rojo", "css_sup_rojo", "wards_destroyed_azul", "wards_destroyed_rojo", "wards_placed_azul", "wards_placed_rojo","jng_share_15_azul","jng_share_15_rojo", "jng_share_azul", "jng_share_rojo"]
     atributos = [[tiempo, parche, nombre_azul, nombre_rojo, gana_azul, gana_rojo, num_asesinatos_azul, num_asesinatos_rojo, primera_sangre, num_torres_azul, num_torres_rojo, primera_torre, num_dragones_azul, num_dragones_viento_azul,num_dragones_infierno_azul, num_dragones_oceano_azul, num_dragones_montaña_azul, num_dragones_rojo, num_dragones_viento_rojo,num_dragones_infierno_rojo, num_dragones_oceano_rojo, num_dragones_montaña_rojo,num_nashors_azul, num_nashors_rojo, num_oro_azul, num_oro_rojo,ban1_azul,ban2_azul,ban3_azul,ban4_azul,ban5_azul,ban1_rojo,ban2_rojo,ban3_rojo,ban4_rojo,ban5_rojo,pick1_azul,pick2_azul,pick3_azul,pick4_azul,pick5_azul,pick1_rojo,pick2_rojo,pick3_rojo,pick4_rojo,pick5_rojo, top_azul, jng_azul, mid_azul, adc_azul, sup_azul, top_rojo, jng_rojo, mid_rojo, adc_rojo, sup_rojo, kills_top_azul, deaths_top_azul, assists_top_azul, kills_jng_azul, deaths_jng_azul, assists_jng_azul, kills_mid_azul, deaths_mid_azul, assists_mid_azul, kills_adc_azul, deaths_adc_azul, assists_adc_azul, kills_sup_azul, deaths_sup_azul, assists_sup_azul ,kills_top_rojo, deaths_top_rojo, assists_top_rojo, kills_jng_rojo, deaths_jng_rojo, assists_jng_rojo, kills_mid_rojo, deaths_mid_rojo, assists_mid_rojo, kills_adc_rojo, deaths_adc_rojo, assists_adc_rojo, kills_sup_rojo, deaths_sup_rojo, assists_sup_rojo, summoner_1_top_azul, summoner_2_top_azul, summoner_1_jng_azul, summoner_2_jng_azul, summoner_1_mid_azul, summoner_2_mid_azul, summoner_1_adc_azul, summoner_2_adc_azul, summoner_1_sup_azul, summoner_2_sup_azul, summoner_1_top_rojo, summoner_2_top_rojo, summoner_1_jng_rojo, summoner_2_jng_rojo, summoner_1_mid_rojo, summoner_2_mid_rojo, summoner_1_adc_rojo, summoner_2_adc_rojo, summoner_1_sup_rojo, summoner_2_sup_rojo, css_top_azul, css_jng_azul, css_mid_azul, css_adc_azul, css_sup_azul, css_top_rojo, css_jng_rojo, css_mid_rojo, css_adc_rojo, css_sup_rojo, wards_destroyed_azul, wards_destroyed_rojo, wards_placed_azul, wards_placed_rojo,jng_share_15_azul,jng_share_15_rojo, jng_share_azul, jng_share_rojo]]
     results = pd.DataFrame(atributos, columns=nombres)
@@ -268,7 +283,7 @@ def get_stats_summary(driver):
 
 
 
-
+# esta función recibe el dato de un nombre que se quiere extraer para cada jugador de la tabla de estadísticas y genera las 10 variables, una para cada jugador
 def get_stat(driver,var,name):
     try:
         table_stats = driver.find_element_by_css_selector(".completestats")
@@ -311,7 +326,7 @@ def get_stat(driver,var,name):
         results = pd.DataFrame(atributos, columns=nombres)
     return results
 
-
+# esta función llama a la función anterior para cada variable que se quiere obtener y se juntan todos los dataframes resultantes en uno
 def get_stats_table(driver):
     dfs=[get_stat(driver,"CS in Team", "cs_in_jung_team"),get_stat(driver,"CS in Enemy", "cs_in_jung_enemy"),get_stat(driver,"CSM","CSM"),get_stat(driver,"Golds","Golds"), get_stat(driver,"GPM","GPM"), get_stat(driver,"GOLD","GOLD"),
     get_stat(driver,"Vision Score", "Vision_Score"), get_stat(driver,"Wards placed", "Wards_placed"), get_stat(driver,"Wards destroyed","Wards_destroyed"),get_stat(driver,"Control Wards", "Control_Wards"),get_stat(driver,'VS%','VS%'),
